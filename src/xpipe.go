@@ -3,10 +3,13 @@
 package main
 
 import (
-    "fmt"
+    "./xpipe"
 )
 
 
 func main() {
-    fmt.Println("Hello, world")
+    rt := xpipe.NewRuntime()
+    rt.EvalString("test | print", "-")
+
+    rt.ExecuteForFile("test.txt")
 }

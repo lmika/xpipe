@@ -2,9 +2,6 @@
 
 package xpipe
 
-import (
-)
-
 
 // A process factory
 type ProcessFactory func() Process
@@ -27,6 +24,15 @@ type Process interface {
 }
 
 
+// Utility method for safely sending something to a sink
+func SendToSink(sink ProcessSink, ctx *ProcessContext, d Datum) error {
+    if sink != nil {
+        return sink.Accept(ctx, d)
+    } else {
+        return nil
+    }
+}
+
 // ----------------------------------------------------------------------
 
 // A pipline chain
@@ -38,11 +44,7 @@ type PipelineChain struct {
 // Implementation of the ProcessSink interface.  This will forward the data to
 // the next process in the chain if one is defined.
 func (pc *PipelineChain) Accept(ctx *ProcessContext, out Datum) error {
-    if pc.Next != nil {
-        return pc.Next.Process.Apply(ctx, out, pc.Next)
-    } else {
-        return nil
-    }
+    return pc.Process.Apply(ctx, out, pc.Next)
 }
 
 // ----------------------------------------------------------------------
@@ -59,8 +61,8 @@ func NewPipeline() *Pipeline {
 }
 
 // Appends a process to the end of the pipeline.
-func (p *Pipeline) Append(proc Process, configArgs []Datum) {
-    pc := &PipelineChain{proc, configArgs, nil}
+func (p *Pipeline) Append(proc Process) {
+    pc := &PipelineChain{proc, nil}
 
     if (p.Start == nil) && (p.End == nil) {
         // Pipeline is empty
@@ -75,8 +77,8 @@ func (p *Pipeline) Append(proc Process, configArgs []Datum) {
 }
 
 // Prepends a process to the start of the pipeline.
-func (p *Pipeline) Prepend(proc Process, configArgs []Datum) {
-    pc := &PipelineChain{proc, configArgs, nil}
+func (p *Pipeline) Prepend(proc Process) {
+    pc := &PipelineChain{proc, nil}
 
     if (p.Start == nil) && (p.End == nil) {
         // Pipeline is empty

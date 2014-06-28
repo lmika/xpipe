@@ -22,7 +22,15 @@ type ProcessRegistry struct {
 
 // Creates a new process registry
 func NewProcessRegistry() *ProcessRegistry {
-    return &ProcessRegistry{make(map[string]*ProcessRegEntry)}
+    pr := &ProcessRegistry{make(map[string]*ProcessRegEntry)}
+    pr.registerStandardProcessors()
+    return pr
+}
+
+// Registers the standard processes
+func (pr *ProcessRegistry) registerStandardProcessors() {
+    pr.Entries["print"] = &ProcessRegEntry{func() Process { return &PrintProcess{} }}
+    pr.Entries["test"] = &ProcessRegEntry{func() Process { return &TestProcess{} }}
 }
 
 // Creates and configures a new process
@@ -33,5 +41,5 @@ func (pr *ProcessRegistry) NewProcess(name string, args []Datum) (Process, error
     }
 
     p := ent.Factory()
-    return p.Config(args), nil
+    return p, p.Config(args)
 }
