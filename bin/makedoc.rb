@@ -40,6 +40,8 @@ def write_md_file(docs)
         puts
         puts d[:lines].strip()
         puts
+        puts "----"
+        puts
     end
 end
 

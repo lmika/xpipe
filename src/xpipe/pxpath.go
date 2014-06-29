@@ -9,9 +9,15 @@ import (
     "github.com/moovweb/gokogiri/xml"
 )
 
-// Pipeline which select nodes using an XPath expression and sends them to the
-// sink as Node datums.
-
+//// xpath <expr>
+//
+//  Selects nodes based on an XPath expression and sends the results to the sink.  If the XPath
+//  expression produces scalars (e.g. string, numbers, booleans), these are sent as single datums
+//  to the sink as well.
+//
+//  XPaths are executed over incoming node and document datums.  All other incomming datums are
+//  filtered out.
+//
 type XPathProcess struct {
     Expr        *xpath.Expression
 }
