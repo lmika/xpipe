@@ -5,7 +5,10 @@ package xpipe
 import (
 )
 
-// Sends through the first datum encountered.
+//// first
+//
+//  Sends through the first datum encountered.  Filters all other datums out.
+//
 type FirstProcess struct {
     FoundDatum      bool
 }

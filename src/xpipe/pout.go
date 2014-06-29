@@ -6,7 +6,13 @@ import (
     "fmt"
 )
 
-// A pipeline that print each datum
+//// print
+//
+//  Prints the results of each datum to standard out.
+//
+//  ```
+//  xpath "/xpath/result" | print
+//  ```
 type PrintProcess struct {
 }
 

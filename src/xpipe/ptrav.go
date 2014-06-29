@@ -6,9 +6,11 @@ package xpipe
 import (
 )
 
-// Selects the document of each datum.  If the datum is a node datum, returns
-// the parent document of the node.  If the datum is a document datum, simply
-// lets it pass through.  All other datums are filtered out.
+//// thisdoc
+//
+//  Selects the document of nodes and sends them to the sink.  Any documents encountered
+//  will pass through unmodified.  All other datums are filtered out.
+//
 type SelectDocumentProcess struct {
 }
 

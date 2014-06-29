@@ -6,7 +6,11 @@ import (
     "fmt"
 )
 
-// Selects the text contents of nodes.
+//// settext <newvalue>
+//
+//  Changes the contents of nodes and document datums to *newvalue*.  All other datums
+//  are sent to the sink unchanged.
+//
 type SetTextProcess struct {
     NewValue    ConfigArg
 }
