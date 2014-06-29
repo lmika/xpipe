@@ -57,13 +57,19 @@ func NewParser(r io.Reader, filename string) *Parser {
 }
 
 // Parses a script.
-//  <script> = <items>*
+//  <script> = <item> (";" <item>)*
 func (p *Parser) ParseScript() (*AstScript, error) {
     items := make([]AstItem, 0)
-    for p.Scanner.Token != scanner.EOF {
+    for (p.Scanner.Token != scanner.EOF) {
         item, err := p.parseItem()
         if err != nil {
             return nil, err
+        }
+
+        if (p.Scanner.Token == ';') {
+            p.Scanner.Scan()
+        } else if (p.Scanner.Token != scanner.EOF) {
+            return nil, p.Error("Unexpected token")
         }
 
         items = append(items, item)

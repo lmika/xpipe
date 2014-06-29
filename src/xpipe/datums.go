@@ -83,7 +83,7 @@ func (n NodeDatum) IsConst() bool {
 
 // A document datum
 type DocDatum           struct {
-    Doc         *xml.XmlDocument
+    Doc         xml.Document
 }
 
 func (d DocDatum) String() string {

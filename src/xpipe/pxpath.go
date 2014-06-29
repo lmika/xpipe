@@ -30,31 +30,41 @@ func (xp *XPathProcess) Config(args []ConfigArg) error {
     return nil
 }
 
+func (xp *XPathProcess) Open(ctx *ProcessContext, sink ProcessSink) error {
+    return SendOpen(sink, ctx)
+}
+
+func (xp *XPathProcess) Close(ctx *ProcessContext, sink ProcessSink) error {
+    return SendClose(sink, ctx)
+}
+
 // Apply the XPath to documents
 func (xp *XPathProcess) Apply(ctx *ProcessContext, in Datum, sink ProcessSink) error {
     switch x := in.(type) {
     case DocDatum:
-        return xp.applyToDocument(ctx, x.Doc, sink)
+        return xp.applyTo(ctx, x.Doc, x.Doc.Root(), sink)
+    case NodeDatum:
+        return xp.applyTo(ctx, x.Node.MyDocument(), x.Node, sink)
     default:
         // Do not forward anything else
         return nil
     }
 }
 
-func (xp *XPathProcess) applyToDocument(ctx *ProcessContext, doc *xml.XmlDocument, sink ProcessSink) error {
-    xpathCtx := doc.DocXPathCtx()
+func (xp *XPathProcess) applyTo(ctx *ProcessContext, doc xml.Document, node xml.Node, sink ProcessSink) error {
+    xpathCtx := xpath.NewXPath(doc.DocPtr())
     defer xpathCtx.Free()
 
     // TODO: Register namespaces
 
-    if err := xpathCtx.Evaluate(doc.DocPtr(), xp.Expr) ; err != nil {
+    if err := xpathCtx.Evaluate(node.NodePtr(), xp.Expr) ; err != nil {
         return err
     }
 
     return xp.sendResultsToSink(xpathCtx, doc, ctx, sink)
 }
 
-func (xp *XPathProcess) sendResultsToSink(xpathCtx *xpath.XPath, doc *xml.XmlDocument, ctx *ProcessContext, sink ProcessSink) error {
+func (xp *XPathProcess) sendResultsToSink(xpathCtx *xpath.XPath, doc xml.Document, ctx *ProcessContext, sink ProcessSink) error {
     switch xpathCtx.ReturnType() {
     case xpath.XPATH_NODESET:
         ns, err := xpathCtx.ResultAsNodeset()
@@ -64,7 +74,7 @@ func (xp *XPathProcess) sendResultsToSink(xpathCtx *xpath.XPath, doc *xml.XmlDoc
 
         for _, np := range ns {
             node := xml.NewNode(np, doc)
-            err = SendToSink(sink, ctx, &NodeDatum{node})
+            err = SendToSink(sink, ctx, NodeDatum{node})
             if err != nil {
                 return err
             }

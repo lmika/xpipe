@@ -15,24 +15,21 @@ func (p *PrintProcess) Config(args []ConfigArg) error {
     return nil
 }
 
+func (p *PrintProcess) Open(ctx *ProcessContext, sink ProcessSink) error {
+    return SendOpen(sink, ctx)
+}
+
+func (p *PrintProcess) Close(ctx *ProcessContext, sink ProcessSink) error {
+    return SendClose(sink, ctx)
+}
+
 // Applies the process with the specific datum.
 func (p *PrintProcess) Apply(ctx *ProcessContext, in Datum, sink ProcessSink) error {
-    fmt.Println(in.String())
-    return nil
-}
-
-// --------------------------------------------------------------------------
-
-// A pipeline that writes a test message
-type TestProcess struct {
-}
-
-// Configures the process using the arguments from pipeline definition
-func (p *TestProcess) Config(args []ConfigArg) error {
-    return nil
-}
-
-// Applies the process with the specific datum.
-func (p *TestProcess) Apply(ctx *ProcessContext, in Datum, sink ProcessSink) error {
-    return SendToSink(sink, ctx, StringDatum("Hello, world"))
+    switch in.(type) {
+    case DocDatum:
+        fmt.Print(in.String())
+    default:
+        fmt.Println(in.String())
+    }
+    return SendToSink(sink, ctx, in)
 }

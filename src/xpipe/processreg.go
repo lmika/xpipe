@@ -30,8 +30,10 @@ func NewProcessRegistry() *ProcessRegistry {
 // Registers the standard processes
 func (pr *ProcessRegistry) registerStandardProcessors() {
     pr.Entries["print"] = &ProcessRegEntry{func() Process { return &PrintProcess{} }}
-    pr.Entries["test"] = &ProcessRegEntry{func() Process { return &TestProcess{} }}
     pr.Entries["xpath"] = &ProcessRegEntry{func() Process { return &XPathProcess{} }}
+    pr.Entries["thisdoc"] = &ProcessRegEntry{func() Process { return &SelectDocumentProcess{} }}
+    pr.Entries["first"] = &ProcessRegEntry{func() Process { return &FirstProcess{} }}
+    pr.Entries["settext"] = &ProcessRegEntry{func() Process { return &SetTextProcess{} }}
 }
 
 // Creates and configures a new process
