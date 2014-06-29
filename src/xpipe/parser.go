@@ -4,6 +4,7 @@ package xpipe
 import (
     "io"
     "fmt"
+    "strconv"
     "text/scanner"
 )
 
@@ -109,14 +110,42 @@ func (p *Parser) parsePipeline() (*AstPipeline, error) {
 }
 
 // Parses a single process
-//  <process> = IDENT
+//  <process> = IDENT (<args>*)
 func (p *Parser) parseProcess() (*AstProcess, error) {
     if p.Scanner.Token != scanner.Ident {
         return nil, p.Error("Expected identifier")
     }
 
-    pr := &AstProcess{p.Scanner.TokenText, nil}
+    prName := p.Scanner.TokenText
+    args := make([]AstProcessArg, 0)
+
+    //pr := &AstProcess{p.Scanner.TokenText, nil}
     p.Scanner.Scan()
 
-    return pr, nil
+    for (p.Scanner.Token != '|') && (p.Scanner.Token != ';') && (p.Scanner.Token != scanner.EOF) {
+        arg, err := p.parseProcessArg()
+        if err != nil {
+            return nil, err
+        }
+
+        args = append(args, arg)
+    }
+
+    return &AstProcess{prName, args, nil}, nil
+}
+
+// Parses a single process argument
+//  <arg> = <string>
+func (p *Parser) parseProcessArg() (AstProcessArg, error) {
+    if (p.Scanner.Token == scanner.String) {
+        sval, err := strconv.Unquote(p.Scanner.TokenText)
+        if err != nil {
+            return nil, err
+        }
+
+        p.Scanner.Scan()
+        return &AstLiteralProcessArg{StringDatum(sval)}, nil
+    } else {
+        return nil, p.Error("Unreognised process argument type")
+    }
 }

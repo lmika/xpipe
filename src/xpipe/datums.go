@@ -16,12 +16,26 @@ type Datum interface {
     String() string
 }
 
+// Base config argument to a process.
+type ConfigArg interface {
+
+    // Returns the string representation of the config argument.
+    String() string
+
+    // Returns true if the config argument is a constant
+    IsConst() bool
+}
+
 
 // A string datum
 type StringDatum        string
 
 func (s StringDatum) String() string {
     return string(s)
+}
+
+func (s StringDatum) IsConst() bool {
+    return true
 }
 
 
@@ -36,6 +50,10 @@ func (b BoolDatum) String() string {
     }
 }
 
+func (n BoolDatum) IsConst() bool {
+    return true
+}
+
 
 // A number datum
 type NumberDatum        float64
@@ -44,14 +62,22 @@ func (n NumberDatum) String() string {
     return fmt.Sprintf("%g", float64(n))
 }
 
+func (n NumberDatum) IsConst() bool {
+    return true
+}
+
 
 // A node datum
 type NodeDatum          struct {
-    Node        *xml.XmlNode
+    Node        xml.Node
 }
 
 func (n NodeDatum) String() string {
     return n.Node.String()
+}
+
+func (n NodeDatum) IsConst() bool {
+    return false
 }
 
 
@@ -62,6 +88,10 @@ type DocDatum           struct {
 
 func (d DocDatum) String() string {
     return d.Doc.String()
+}
+
+func (d DocDatum) IsConst() bool {
+    return false
 }
 
 // --------------------------------------------------------------------------

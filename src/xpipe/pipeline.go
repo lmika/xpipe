@@ -17,7 +17,7 @@ type ProcessSink interface {
 type Process interface {
 
     // Configures the process using the arguments from pipeline definition
-    Config(args []Datum) error
+    Config(args []ConfigArg) error
 
     // Applies the process with the specific datum.
     Apply(ctx *ProcessContext, in Datum, sink ProcessSink) error

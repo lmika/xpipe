@@ -11,7 +11,7 @@ type PrintProcess struct {
 }
 
 // Configures the process using the arguments from pipeline definition
-func (p *PrintProcess) Config(args []Datum) error {
+func (p *PrintProcess) Config(args []ConfigArg) error {
     return nil
 }
 
@@ -28,7 +28,7 @@ type TestProcess struct {
 }
 
 // Configures the process using the arguments from pipeline definition
-func (p *TestProcess) Config(args []Datum) error {
+func (p *TestProcess) Config(args []ConfigArg) error {
     return nil
 }
 

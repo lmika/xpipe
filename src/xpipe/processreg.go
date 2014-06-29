@@ -31,10 +31,11 @@ func NewProcessRegistry() *ProcessRegistry {
 func (pr *ProcessRegistry) registerStandardProcessors() {
     pr.Entries["print"] = &ProcessRegEntry{func() Process { return &PrintProcess{} }}
     pr.Entries["test"] = &ProcessRegEntry{func() Process { return &TestProcess{} }}
+    pr.Entries["xpath"] = &ProcessRegEntry{func() Process { return &XPathProcess{} }}
 }
 
 // Creates and configures a new process
-func (pr *ProcessRegistry) NewProcess(name string, args []Datum) (Process, error) {
+func (pr *ProcessRegistry) NewProcess(name string, args []ConfigArg) (Process, error) {
     ent, hasEnt := pr.Entries[name]
     if !hasEnt {
         return nil, fmt.Errorf("No such process: %s", name)

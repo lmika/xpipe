@@ -52,11 +52,17 @@ func (a *AstPipeline) Config(rt *Runtime) error {
 // A process invocation
 type AstProcess struct {
     Name        string
+    Args        []AstProcessArg
     Next        *AstProcess
 }
 
 func (a *AstProcess) AddToPipeline(rt *Runtime, pl *Pipeline) error {
-    p, err := rt.Registry.NewProcess(a.Name, []Datum {})
+    pargs := make([]ConfigArg, len(a.Args))
+    for i, arg := range a.Args {
+        pargs[i] = arg.ToConfigArg()
+    }
+
+    p, err := rt.Registry.NewProcess(a.Name, pargs)
     if err != nil {
         return err
     }
@@ -67,4 +73,22 @@ func (a *AstProcess) AddToPipeline(rt *Runtime, pl *Pipeline) error {
     } else {
         return nil
     }
+}
+
+// -------------------------------------------------------------------------
+//
+
+// Ast Process arguments
+type AstProcessArg interface {
+    // Converts the argument into a ConfigArg
+    ToConfigArg()   ConfigArg
+}
+
+// A literal argument
+type AstLiteralProcessArg struct {
+    L               ConfigArg
+}
+
+func (a *AstLiteralProcessArg) ToConfigArg() ConfigArg {
+    return a.L
 }

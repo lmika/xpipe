@@ -4,6 +4,10 @@ package xpipe
 
 import (
     "strings"
+    "bytes"
+    "os"
+
+    "github.com/moovweb/gokogiri"
 )
 
 // A runtime instance
@@ -38,13 +42,42 @@ func (rt *Runtime) EvalString(str string, fileName string) error {
 }
 
 // Execute for a file
-func (rt *Runtime) ExecuteForFile(filename string) {
-    rt.runPipelines(nil)
+func (rt *Runtime) ExecuteForFile(filename string) error {
+    var file *os.File
+    var err error
+
+    if (filename == "-") {
+        file = os.Stdin
+    } else {
+        file, err = os.Open(filename)
+        if err != nil {
+            return err
+        }
+        defer file.Close()
+    }
+
+    buffer := bytes.Buffer{}
+    buffer.ReadFrom(file)
+
+    doc, err := gokogiri.ParseXml(buffer.Bytes())
+    if err != nil {
+        return err
+    }
+
+    return rt.runPipelines(&ProcessContext{filename}, DocDatum{doc})
 }
 
 // Run the pipelines
-func (rt *Runtime) runPipelines(ctx *ProcessContext) {
+func (rt *Runtime) runPipelines(ctx *ProcessContext, in Datum) error {
     for _, pl := range rt.Pipelines {
-        pl.Accept(nil, nil)
+        if err := rt.runPipeline(pl, ctx, in) ; err != nil {
+            return err
+        }
     }
+    return nil
+}
+
+// Runs a pipeline
+func (rt *Runtime) runPipeline(p *Pipeline, ctx *ProcessContext, in Datum) error {
+    return p.Accept(ctx, in)
 }
