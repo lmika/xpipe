@@ -12,6 +12,9 @@ type ProcessRegEntry struct {
     Factory     ProcessFactory
 }
 
+// Empty config args array
+var EmptyConfigArgs = []ConfigArg {}
+
 // --------------------------------------------------------------------------
 //
 
@@ -36,8 +39,13 @@ func (pr *ProcessRegistry) registerStandardProcessors() {
     pr.Entries["settext"] = &ProcessRegEntry{func() Process { return &SetTextProcess{} }}
 }
 
-// Creates and configures a new process
+// Creates and configures a new process.  If args is nil, it is treated as an empty config args array.
+//
 func (pr *ProcessRegistry) NewProcess(name string, args []ConfigArg) (Process, error) {
+    if args == nil {
+        args = EmptyConfigArgs
+    }
+
     ent, hasEnt := pr.Entries[name]
     if !hasEnt {
         return nil, fmt.Errorf("No such process: %s", name)
@@ -45,4 +53,14 @@ func (pr *ProcessRegistry) NewProcess(name string, args []ConfigArg) (Process, e
 
     p := ent.Factory()
     return p, p.Config(args)
+}
+
+// Creates and configures a new process.  Panics on error
+func (pr *ProcessRegistry) MustNewProcess(name string, args []ConfigArg) Process {
+    p, err := pr.NewProcess(name, args)
+    if err != nil {
+        panic(err)
+    }
+
+    return p
 }

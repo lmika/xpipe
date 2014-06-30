@@ -15,6 +15,9 @@ type Runtime struct {
     Registry        *ProcessRegistry
     Pipelines       []*Pipeline
     NsMapping       map[string]string
+
+    CommonStart     *Pipeline
+    CommonEnd       *Pipeline
 }
 
 
@@ -24,12 +27,22 @@ func NewRuntime() *Runtime {
         Registry:       NewProcessRegistry(),
         Pipelines:      make([]*Pipeline, 0),
         NsMapping:      make(map[string]string),
+        CommonStart:    NewPipeline(),
+        CommonEnd:      NewPipeline(),
     }
 }
 
 // Adds a new pipeline
 func (rt *Runtime) AddPipeline(p *Pipeline) {
-    rt.Pipelines = append(rt.Pipelines, p)
+
+    // Clone the pipeline and add common start and ends
+    // TODO: Find a better way to do this.
+    pipelineToRun := NewPipeline()
+    pipelineToRun.AppendPipeline(rt.CommonStart)
+    pipelineToRun.AppendPipeline(p)
+    pipelineToRun.AppendPipeline(rt.CommonEnd)
+
+    rt.Pipelines = append(rt.Pipelines, pipelineToRun)
 }
 
 // Add a new namespace mapping
@@ -103,5 +116,5 @@ func (rt *Runtime) runPipelines(ctx *ProcessContext, in Datum) error {
 
 // Runs a pipeline
 func (rt *Runtime) runPipeline(p *Pipeline, ctx *ProcessContext, in Datum) error {
-    return p.Accept(ctx, in)
+    return p.WithDatum(ctx, in)
 }

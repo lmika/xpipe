@@ -114,6 +114,26 @@ func (p *Pipeline) Append(proc Process) {
     }
 }
 
+// Appends the elements of another pipeline to this pipeline.  This does
+// not modify the original pipeline.
+//
+// TODO: Redo this.  This is stupid!!
+func (p *Pipeline) AppendPipeline(other *Pipeline) {
+    var isChain bool
+
+    if other == nil {
+        return
+    }
+
+    pc := other.Start
+    for pc != nil {
+        p.Append(pc.Process)
+        if pc, isChain = pc.Next.(*PipelineChain) ; !isChain {
+            break
+        }
+    }
+}
+
 // Prepends a process to the start of the pipeline.
 func (p *Pipeline) Prepend(proc Process) {
     pc := &PipelineChain{proc, nil}
@@ -130,20 +150,49 @@ func (p *Pipeline) Prepend(proc Process) {
     }
 }
 
-// Executes the process, starting a single datum
+// Opens the pipeline
+func (p *Pipeline) Open(ctx *ProcessContext) error {
+    if p.Start != nil {
+        return p.Start.Open(ctx)
+    } else {
+        return nil
+    }
+}
+
+// Closes the pipeline
+func (p *Pipeline) Close(ctx *ProcessContext) error {
+    if p.Start != nil {
+        return p.Start.Close(ctx)
+    } else {
+        return nil
+    }
+}
+
+// Sends a datum to the pipeline
 func (p *Pipeline) Accept(ctx *ProcessContext, d Datum) error {
     if p.Start != nil {
-        err := p.Start.Open(ctx)
+        return p.Start.Accept(ctx, d)
+    } else {
+        return nil
+    }
+}
+
+// Starts the pipeline
+func (p *Pipeline) WithDatum(ctx *ProcessContext, d Datum) error {
+    if p.Start != nil {
+        var err error
+
+        err = p.Open(ctx)
         if err != nil {
             return err
         }
 
-        err = p.Start.Accept(ctx, d)
+        err = p.Accept(ctx, d)
         if err != nil {
             return err
         }
 
-        err = p.Start.Close(ctx)
+        err = p.Close(ctx)
         if err != nil {
             return err
         }

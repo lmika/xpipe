@@ -15,6 +15,9 @@ import (
 // Flag for describing the expression
 var flagExpression *string = flag.String("e", "", "Process expression")
 
+// Flag for starting with an XPath expression.  This doesn't require an -e
+var flagXPathExpr *string = flag.String("x", "", "Select XPath")
+
 
 // Die with an error message
 func die(err error) {
@@ -24,9 +27,15 @@ func die(err error) {
 
 func main() {
     var err error
+    var usageOk bool = false
+    var addEmptyPipelineIfNoExpr bool = false
+
     flag.Parse()
 
     rt := xpipe.NewRuntime()
+
+    // Setup a common end
+    rt.CommonEnd.Append(rt.Registry.MustNewProcess("print", nil))
 
     // Read the users RC file
     if user, err := user.Current() ; err == nil {
@@ -37,15 +46,29 @@ func main() {
         }
     }
 
-    if *flagExpression == "" {
-        flag.Usage()
-        os.Exit(2)
+    if *flagXPathExpr != "" {
+        rt.CommonStart.Append(rt.Registry.MustNewProcess("xpath", []xpipe.ConfigArg { xpipe.StringDatum(*flagXPathExpr) }))
+        usageOk = true
+        addEmptyPipelineIfNoExpr= true
     }
 
+
     // Parse the expression
-    err = rt.EvalString(*flagExpression, "-e")
-    if err != nil {
-        die(err)
+    if *flagExpression != "" {
+        err = rt.EvalString(*flagExpression, "-e")
+        if err != nil {
+            die(err)
+        }
+        usageOk = true
+    } else if (addEmptyPipelineIfNoExpr) {
+        // If there is a need to add a default pipeline (because someone has specified -x), add an empty
+        // pipeline.
+        rt.AddPipeline(xpipe.NewPipeline())
+    }
+
+    if !usageOk {
+        flag.Usage()
+        os.Exit(2)
     }
 
     // Execute for files
