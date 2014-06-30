@@ -5,6 +5,8 @@ package main
 import (
     "fmt"
     "os"
+    "os/user"
+    "path/filepath"
     "flag"
 
     "./xpipe"
@@ -24,12 +26,21 @@ func main() {
     var err error
     flag.Parse()
 
+    rt := xpipe.NewRuntime()
+
+    // Read the users RC file
+    if user, err := user.Current() ; err == nil {
+        rcFilename := filepath.Join(user.HomeDir, ".xpiperc")
+        err := rt.EvalFile(rcFilename)
+        if err != nil && !os.IsNotExist(err) {
+            die(err)
+        }
+    }
+
     if *flagExpression == "" {
         flag.Usage()
         os.Exit(2)
     }
-
-    rt := xpipe.NewRuntime()
 
     // Parse the expression
     err = rt.EvalString(*flagExpression, "-e")

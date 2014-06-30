@@ -20,6 +20,7 @@ type Scanner struct {
 func NewScanner(r io.Reader, filename string) *Scanner {
     s := scanner.Scanner{}
     s.Init(r)
+    s.Position.Filename = filename
 
     tok := s.Scan()
     toktext := s.TokenText()
@@ -31,6 +32,11 @@ func NewScanner(r io.Reader, filename string) *Scanner {
 func (s *Scanner) Scan() {
     s.Token = s.S.Scan()
     s.TokenText = s.S.TokenText()
+}
+
+// Returns true if the current token is an ident with a specific text.
+func (s *Scanner) IsKeyword(value string) bool {
+    return (s.Token == scanner.Ident) && (s.TokenText == value)
 }
 
 // Returns the position
@@ -49,6 +55,17 @@ type Parser struct {
 // Creates a scan error
 func (p *Parser) Error(msg string) error {
     return fmt.Errorf("%s: error - %s", p.Scanner.Position(), msg)
+}
+
+// Consumes a token of a specific type.  If the token is not of that type, returns an error
+func (p *Parser) Consume(tok rune) error {
+    if (p.Scanner.Token != tok) {
+        return p.Error(fmt.Sprintf("Expected %s but found %s",
+                scanner.TokenString(tok), scanner.TokenString(p.Scanner.Token)))
+    } else {
+        p.Scanner.Scan()
+        return nil
+    }
 }
 
 // Creates a new parser 
@@ -79,9 +96,42 @@ func (p *Parser) ParseScript() (*AstScript, error) {
 }
 
 // Parse a single item.
-//  <item> = <pipeline>
+//  <item> = <namespaceMapping> | <pipeline>
 func (p *Parser) parseItem() (AstItem, error) {
-    return p.parsePipeline()
+    if (p.Scanner.IsKeyword("ns")) {
+        return p.parseNamespaceMapping()
+    } else {
+        return p.parsePipeline()
+    }
+}
+
+// Parse a namespace mapping.
+//  <namespaceMapping> = "ns" <IDENT> "=" <STRING>
+func (p *Parser) parseNamespaceMapping() (AstItem, error) {
+    var err error
+    if !p.Scanner.IsKeyword("ns") {
+        return nil, p.Error("Expected keyword 'ns'")
+    }
+    p.Scanner.Scan()
+
+    prefix := p.Scanner.TokenText
+    if err = p.Consume(scanner.Ident) ; err != nil {
+        return nil, err
+    }
+
+    if err := p.Consume('=') ; err != nil {
+        return nil, err
+    }
+
+    value := p.Scanner.TokenText
+    if err = p.Consume(scanner.String) ; err != nil {
+        return nil, err
+    }
+    if value, err = strconv.Unquote(value); err != nil {
+        return nil, err
+    }
+
+    return &AstNamespaceMapping{prefix, value}, nil
 }
 
 // Parses a pipeline

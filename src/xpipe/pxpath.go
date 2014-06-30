@@ -61,7 +61,9 @@ func (xp *XPathProcess) applyTo(ctx *ProcessContext, doc xml.Document, node xml.
     xpathCtx := xpath.NewXPath(doc.DocPtr())
     defer xpathCtx.Free()
 
-    // TODO: Register namespaces
+    for prefix, url := range ctx.Runtime.NsMapping {
+        xpathCtx.RegisterNamespace(prefix, url)
+    }
 
     if err := xpathCtx.Evaluate(node.NodePtr(), xp.Expr) ; err != nil {
         return err

@@ -14,6 +14,7 @@ import (
 type Runtime struct {
     Registry        *ProcessRegistry
     Pipelines       []*Pipeline
+    NsMapping       map[string]string
 }
 
 
@@ -22,6 +23,7 @@ func NewRuntime() *Runtime {
     return &Runtime {
         Registry:       NewProcessRegistry(),
         Pipelines:      make([]*Pipeline, 0),
+        NsMapping:      make(map[string]string),
     }
 }
 
@@ -30,9 +32,31 @@ func (rt *Runtime) AddPipeline(p *Pipeline) {
     rt.Pipelines = append(rt.Pipelines, p)
 }
 
+// Add a new namespace mapping
+func (rt *Runtime) AddNamespaceMapping(prefix string, url string) {
+    rt.NsMapping[prefix] = url
+}
+
 // Evalutate a script from a string
 func (rt *Runtime) EvalString(str string, fileName string) error {
     pr := NewParser(strings.NewReader(str), fileName)
+    ast, err := pr.ParseScript()
+    if err != nil {
+        return err
+    }
+
+    return ast.Configure(rt)
+}
+
+// Evalutate a script from a file
+func (rt *Runtime) EvalFile(fileName string) error {
+    file, err := os.Open(fileName)
+    if err != nil {
+        return err
+    }
+    defer file.Close()
+
+    pr := NewParser(file, fileName)
     ast, err := pr.ParseScript()
     if err != nil {
         return err
@@ -64,7 +88,7 @@ func (rt *Runtime) ExecuteForFile(filename string) error {
         return err
     }
 
-    return rt.runPipelines(&ProcessContext{filename}, DocDatum{doc})
+    return rt.runPipelines(&ProcessContext{rt, filename}, DocDatum{doc})
 }
 
 // Run the pipelines

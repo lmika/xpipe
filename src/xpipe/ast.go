@@ -30,6 +30,19 @@ type AstItem    interface {
     Config(rt *Runtime) error
 }
 
+type AstNamespaceMapping struct {
+    Prefix      string
+    Url         string
+}
+
+func (a *AstNamespaceMapping) Config(rt *Runtime) error {
+    rt.AddNamespaceMapping(a.Prefix, a.Url)
+    return nil
+}
+
+// ---------------------------------------------------------------------------
+//
+
 // A pipeline definition
 type AstPipeline struct {
     Processes   *AstProcess

@@ -99,5 +99,6 @@ func (d DocDatum) IsConst() bool {
 
 // Execution context for a pipeline.
 type ProcessContext    struct {
+    Runtime     *Runtime
     Filename    string
 }
