@@ -1,55 +1,73 @@
-XPIPE
+xpipe
 =====
 
 A small XML processing tool which doesn't require XML to work.
 
+Usage
+-----
 
-EXPRESSIONS
+```
+$ xpipe [SWITCHES] [FILES]
+```
+
+Valid switches are:
+
+    - `-e`: Pipeline expression to execute.
+    - `-x`: Select nodes matching an XPath expression instead of the entire DOM.
+    - `-l`: Display filenames which contain results.
+    - `-L`: Display filenames which contain no results.
+
+Either `-x` or `-e` need to be defined at a minimum.
+
+Expressions
 -----------
 
-XPipe expressions are built using a pipeline language.  Pipelines, by default
-start off with the entire DOM being worked on, and end with displaying the resulting
-values.
-
-Values can be either:
+Expressions consist of pipelines with a bunch of special statements.  Pipelines
+take values, called datums, and produce other datums.  A datum can be:
 
     - Strings
     - Numbers
     - Booleans
-    - Nodes of a DOM
-    - A DOM
+    - XML Nodes
+    - XML Documents
 
-Example: displaying results from an XPath expression:
+Pipelines consist of processors separated by the pipe character ("|").  Each
+process transform datums in some way.
 
-    xpath "/something/here"
+For example, a pipeline which changes the groupId of a Maven Pom file can be
+written as so:
 
-Example: setting the value of nodes that match an XPath expression:
+    xpath "/project/groupId" | settext "another.group"
 
-    xpath "/something/here" | setto "A Value"
+By default, each individual pipeline starts with the entire XML document and passes
+the final results to a process which prints it to standard out.  Using the `-x`
+switch, an implicit `xpath` process will be place in the front of each pipeline.
 
-Example: adding an attribute
+Multiple pipelines can be defined, each one separated by the semicolon (";").  Each
+individual pipeline is executed in the order they appear in the expression and make
+use of the same DOM.  Note that some statements, line `settext`, may modify the
+underlying XML DOM, which could affect pipelines running afterwards.
 
-    xpath "/something/here" | setattr "abc" "123"
+Namespace Mappings
+------------------
 
-Example: declaraing a profile
+The XPath processor is namespace aware and will require explicit mapping of namespaces
+that cannot be inferred.  To create a mapping from a URL to a prefix, add the `ns`
+statement:
 
-    profile mvn {
-        ns m="http:bladibla";
-    }
+    ns m = "http://maven.apache.org/POM/4.0.0" ; xpath "/m:project/m:groupId"
 
-    xpath "/msomething" | setto "Fla"
+Syntax
+======
 
+The full language syntax is given below:
 
-Language syntax:
+```
+<expression>        =   <statement> (";" <statement>)*
+<statement>         =   <namespaceMapping> | <pipeline>
 
-    <script> = <statements>
-    <statements> = <statement> ((";" | "\n") <statement>)*
+<namespaceMapping>  =   "ns" <prefix:IDENT> "=" <url:STRING>
 
-    <statement> = <nsmapping> | <profiledecl> | <pipeline>
-    <nsmapping> = "ns" <ident> "=" <string>
-    <profiledecl> = "profile" <ident> "{" <statements> "}"
-
-    <pipeline> = <processchain>
-    <processchain> = <process> ("|" <process>)*
-    <process> = <ident> <arg>*
-    <arg> = <string>
+<pipeline>          =   <process> ("|" <process>)*
+<process>           =   <processName:IDENT> <processArgs:STRING>*
+```
