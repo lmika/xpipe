@@ -20,6 +20,22 @@ Prints the results of each datum to standard out.
 xpath "/xpath/result" | print
 ```
 
+### printemptyfile
+
+```
+printemptyfile
+```
+
+Prints the filename if no datums are encountered.
+
+### printfile
+
+```
+printfile
+```
+
+Prints the filename if at least one datum is encountered.
+
 ### settext
 
 ```

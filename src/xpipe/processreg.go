@@ -32,11 +32,13 @@ func NewProcessRegistry() *ProcessRegistry {
 
 // Registers the standard processes
 func (pr *ProcessRegistry) registerStandardProcessors() {
-    pr.Entries["print"] = &ProcessRegEntry{func() Process { return &PrintProcess{} }}
     pr.Entries["xpath"] = &ProcessRegEntry{func() Process { return &XPathProcess{} }}
     pr.Entries["thisdoc"] = &ProcessRegEntry{func() Process { return &SelectDocumentProcess{} }}
     pr.Entries["first"] = &ProcessRegEntry{func() Process { return &FirstProcess{} }}
     pr.Entries["settext"] = &ProcessRegEntry{func() Process { return &SetTextProcess{} }}
+    pr.Entries["print"] = &ProcessRegEntry{func() Process { return &PrintProcess{} }}
+    pr.Entries["printfile"] = &ProcessRegEntry{func() Process { return &PrintFileProcess{} }}
+    pr.Entries["printemptyfile"] = &ProcessRegEntry{func() Process { return &PrintEmptyFileProcess{} }}
 }
 
 // Creates and configures a new process.  If args is nil, it is treated as an empty config args array.

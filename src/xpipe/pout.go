@@ -39,3 +39,63 @@ func (p *PrintProcess) Apply(ctx *ProcessContext, in Datum, sink ProcessSink) er
     }
     return SendToSink(sink, ctx, in)
 }
+
+//// printfile
+//
+//  Prints the filename if at least one datum is encountered.
+//
+type PrintFileProcess struct {
+    hasDatum        bool
+}
+
+// Configures the process using the arguments from pipeline definition
+func (p *PrintFileProcess) Config(args []ConfigArg) error {
+    return nil
+}
+
+func (p *PrintFileProcess) Open(ctx *ProcessContext, sink ProcessSink) error {
+    p.hasDatum = false
+    return SendOpen(sink, ctx)
+}
+
+func (p *PrintFileProcess) Close(ctx *ProcessContext, sink ProcessSink) error {
+    if p.hasDatum {
+        fmt.Println(ctx.Filename)
+    }
+    return SendClose(sink, ctx)
+}
+
+func (p *PrintFileProcess) Apply(ctx *ProcessContext, in Datum, sink ProcessSink) error {
+    p.hasDatum = true
+    return SendToSink(sink, ctx, in)
+}
+
+//// printemptyfile
+//
+//  Prints the filename if no datums are encountered.
+//
+type PrintEmptyFileProcess struct {
+    hasDatum        bool
+}
+
+// Configures the process using the arguments from pipeline definition
+func (p *PrintEmptyFileProcess) Config(args []ConfigArg) error {
+    return nil
+}
+
+func (p *PrintEmptyFileProcess) Open(ctx *ProcessContext, sink ProcessSink) error {
+    p.hasDatum = false
+    return SendOpen(sink, ctx)
+}
+
+func (p *PrintEmptyFileProcess) Close(ctx *ProcessContext, sink ProcessSink) error {
+    if !p.hasDatum {
+        fmt.Println(ctx.Filename)
+    }
+    return SendClose(sink, ctx)
+}
+
+func (p *PrintEmptyFileProcess) Apply(ctx *ProcessContext, in Datum, sink ProcessSink) error {
+    p.hasDatum = true
+    return SendToSink(sink, ctx, in)
+}

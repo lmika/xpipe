@@ -18,6 +18,12 @@ var flagExpression *string = flag.String("e", "", "Process expression")
 // Flag for starting with an XPath expression.  This doesn't require an -e
 var flagXPathExpr *string = flag.String("x", "", "Select XPath")
 
+// List files with at-least one datum
+var flagListWithDatum *bool = flag.Bool("l", false, "List file with results")
+
+// List files with no datums
+var flagListWithoutDatum *bool = flag.Bool("L", false, "List files without results")
+
 
 // Die with an error message
 func die(err error) {
@@ -34,8 +40,14 @@ func main() {
 
     rt := xpipe.NewRuntime()
 
-    // Setup a common end
-    rt.CommonEnd.Append(rt.Registry.MustNewProcess("print", nil))
+    // Setup a common end depending on what the user wants to see
+    if *flagListWithDatum {
+        rt.CommonEnd.Append(rt.Registry.MustNewProcess("printfile", nil))
+    } else if *flagListWithoutDatum {
+        rt.CommonEnd.Append(rt.Registry.MustNewProcess("printemptyfile", nil))
+    } else {
+        rt.CommonEnd.Append(rt.Registry.MustNewProcess("print", nil))
+    }
 
     // Read the users RC file
     if user, err := user.Current() ; err == nil {
