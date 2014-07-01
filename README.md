@@ -48,8 +48,7 @@ individual pipeline is executed in the order they appear in the expression and m
 use of the same DOM.  Note that some statements, line `settext`, may modify the
 underlying XML DOM, which could affect pipelines running afterwards.
 
-Namespace Mappings
-------------------
+### Namespace Mappings
 
 The XPath processor is namespace aware and will require explicit mapping of namespaces
 that cannot be inferred.  To create a mapping from a URL to a prefix, add the `ns`
